@@ -1,13 +1,20 @@
-FROM golang:1.20-alpine
+FROM golang:1.20-alpine as build
 
-WORKDIR /app
+WORKDIR /go/src/app
 
-COPY . ./
+COPY . .
 
 RUN go mod download
 
-RUN go build -o /internship
+RUN CGO_ENABLED=0 go build -o /app
+
+
+RUN CGO_ENABLED=0 go build -o /go/bin/app
+
+FROM gcr.io/distroless/static-debian11
+
+COPY --from=build /go/bin/app /
 
 EXPOSE 9090
 
-CMD [ "/internship" ]
+CMD ["/app"]
