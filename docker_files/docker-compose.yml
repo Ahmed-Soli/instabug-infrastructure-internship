@@ -1,0 +1,29 @@
+version: '2.1' #verion 3 doesn't support depends_on condition
+services:
+  db:
+    image:  mysql:8.0.23
+    container_name: godockerDB
+    environment:
+      MYSQL_USER: docker
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: internship
+    ports:
+      - "3306:3306"
+    healthcheck: # to wait till the db is up and ready then run the go app
+      test: ["CMD", "mysqladmin", "-udocker", "-ppassword",  "ping", "-h", "localhost"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+  go-app:
+    build: .
+    environment:
+      MYSQL_USER: docker
+      MYSQL_PASS: password
+      MYSQL_HOST: godockerDB
+      MYSQL_PORT: 3306
+    ports:
+      - "9090:9090"
+    depends_on:
+      db:
+        condition: service_healthy
