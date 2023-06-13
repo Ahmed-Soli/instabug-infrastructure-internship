@@ -15,8 +15,8 @@ type handler struct {
 }
 
 type row struct {
-	id        int64
-	createdAt time.Time
+    Id        int64       `json:"id"`
+    CreatedAt time.Time   `json:"created_at"`
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -38,8 +38,8 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for rs.Next() {
 			cur := row{}
 			err = rs.Scan(
-				&cur.id,
-				&cur.createdAt,
+				&cur.Id,
+				&cur.CreatedAt,
 			)
 
 			if err != nil {
