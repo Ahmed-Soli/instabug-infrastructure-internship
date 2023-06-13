@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-app
+  labels:
+    app: go-app
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      app: go-app
+  template:
+    metadata:
+      labels:
+        app: go-app
+    spec:
+      containers:
+      - name: go-app
+        image: {{ .Values.app.container.image }}
+        ports:
+        - containerPort: {{ .Values.app.container.port }}
+        env:
+          - name: MYSQL_USER
+            value: {{ .Values.app.container.env.MYSQL_USER }}
+          - name: MYSQL_PASS
+            value: {{ .Values.app.container.env.MYSQL_PASS }}
+          - name: MYSQL_HOST
+            value: {{ .Values.app.container.env.MYSQL_HOST }}
+          - name: MYSQL_PORT
+            # value: {{ .Values.app.container.env.MYSQL_PORT }}
+            value: "3306" # the helm yaml values is evaluating this to an int with gives an error in the Struct
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "1"
+          requests:
+            memory: 256Mi
+            cpu: "0.2"

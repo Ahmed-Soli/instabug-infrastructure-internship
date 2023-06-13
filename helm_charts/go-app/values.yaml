@@ -1,0 +1,20 @@
+app:
+  replicas: 1
+  container:
+    port: "9090"
+    image: ahmedsoliman202/go-app:min
+    env:
+      MYSQL_USER: root
+      MYSQL_PASS: password
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+  service:
+    target_port: 9090
+    node_port: 30008
+
+
+hpa:
+  enable: false
+  minReplicas: 4
+  maxReplicas: 10
+  percentage: 50

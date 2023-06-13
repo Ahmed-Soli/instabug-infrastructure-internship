@@ -1,0 +1,15 @@
+{{- if .Values.hpa.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: go-app
+  labels: go-app
+spec:
+  minReplicas: {{ .Values.hpa.minReplicas }}
+  maxReplicas: {{ .Values.hpa.maxReplicas }}
+  scaleTargetRef:
+    apiVersion: extensions/v1
+    kind: Deployment
+    name: go-app
+  targetCPUUtilizationPercentage: {{ .Values.hpa.percentage }}
+{{- end -}}
