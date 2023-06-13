@@ -1,0 +1,25 @@
+pipeline {
+    agent any
+    
+    stages{
+        stage('Build docker image'){
+            steps{
+                script{
+                    sh 'docker build -t ahmedsoliman202/go-app .'
+                }
+            }
+        }
+        stage('Push image to Hub'){
+            steps{
+                script{
+                   sh 'docker login -u ahmedsoliman202 -p Do42615185' 
+                // this is production way to define secret_text variable in Jenkins instead of using plain text
+                //    withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) { 
+                //    sh 'docker login -u ahmedsoliman202 -p ${dockerhubpwd}' 
+                   }
+                   sh 'docker push ahmedsoliman202/go-app'
+                }
+            }
+        }
+        
+    }
