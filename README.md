@@ -2,20 +2,30 @@
 
 The assignment is a simple stateful web app with simple CRUD functionality written in Go Lang and uses mysql as a Database.
 
-## requirements
+# Table of content
+1. [Project requirements](#req)
+2. [Phase 1 ( run the go api app locally )](#local)
+3. [Phase 2 ( containerizing the go api app Using Docker)](#docker)
+4. [Phase 3 ( building CI to push the go api app to dockerhub using Jenkins)](#jenkins)
+5. [Phase 4 ( deploying the go api app with Kubernetes)](#Kubernetes)
+6. [Phase 5 ( deploying the go api app with Helm Charts)](#helm)
+7. [Phase 6 ( building CD of the go api app Using ArgoCD and Helm Charts)](#argocd)
+8. [Time for some Screen Shots](#screen_shots)
+
+## requirements <a name="req"></a>
 
 - Dockerfile that build the app and try to make it as lightweight as you can.
 - Pipeline job (jenkinsfile) to build the app using dockerfile and reports if any errors happened in the build. The output of the build step should be a docker image pushed to dockerhub or any docker repo you want.
 - Docker compose file that contains both application and mysql database so you can run the app locally.
 - Helm manifests for kubernetes to deploy the app using them on kubernetes with adding config to support high availability and volume persistence and exposing service to the public (you can use minikube to test).
-## As a bonus you can
 
-- Add autoscaling manifest for number of replicas. 
-- Add argocd app that points to helm manifests to apply gitops concept. 
-- Secure your containers as much as you can. 
--  Fix a bug in the code that would appear when you test the api (all needed information of api is in the readme file)
+    ## As a bonus you can
+    - Add autoscaling manifest for number of replicas. 
+    - Add argocd app that points to helm manifests to apply gitops concept. 
+    - Secure your containers as much as you can. 
+    -  Fix a bug in the code that would appear when you test the api (all needed information of api is in the readme file)
 
-## Phase 1 ( run the go api app locally )
+## Phase 1 ( run the go api app locally )<a name="local"></a>
 
 - Make sure you have MYSQL installed and running before running the go app.
 
@@ -41,7 +51,7 @@ The assignment is a simple stateful web app with simple CRUD functionality writt
     - Or [Curl](https://curl.se/).
     - You can test the `healthcheck` endpoint in the browser by going to this url `127.0.0.1:9090/healthcheck` if all the setup is correct you should be getting `{"status":"ok"}`
 
-## Phase 2 ( dockerizing/containerizing the go api app Using Docker)
+## Phase 2 ( containerizing the go api app Using Docker)<a name="docker"></a>
 
 - Make sure to have Docker installed using their [official website](https://docs.docker.com/get-docker/)
 - My first attempt was successful in creating, building and testing a docker image for the go api app but the size was `330 MB`
@@ -49,7 +59,7 @@ The assignment is a simple stateful web app with simple CRUD functionality writt
 
     - You can build a docker image using this command and tag it using the `-t`
         ```bash
-        docker build . -t go-app:min
+        docker build -f ./docker_files/Dockerfile -t go-app:min .
         ```
 	- Before running the `go-app` container, We have to run a MYSQL container first, passing all the required MYSQL Environment Variables
         ```bash
@@ -71,8 +81,9 @@ The assignment is a simple stateful web app with simple CRUD functionality writt
     - once the go app starts, it tries to connect to MYSQL, that's why we launch the mysql container first but in case of docker-compose. both go-app and mysql containers start immediately, and the mysql container haven't loaded yet so the go-app crashes and to fix this issue, I implemented two approaches:
         - Added a `healthcheck` command to make sure the db is up and ready.
         - Added a `depends_on` tag in the go-app section to force the container to wait till the healthcheck is true and then start the container
+    - I used -f with `docker build` to specifiy the location of Dockerfile and `.` to specify the location which includes the files Dockerfile deals with
 
-## Phase 3 ( building CI to push the go api app to dockerhub using Jenkins)
+## Phase 3 ( building CI to push the go api app to dockerhub using Jenkins)<a name="jenkins"></a>
 
 - Make sure to have Jenkins installed using [their website here](https://www.jenkins.io/doc/book/installing/) .
 
@@ -86,10 +97,11 @@ The assignment is a simple stateful web app with simple CRUD functionality writt
     ```bash
     docker push ahmedsoliman202/go-app:min
     ```
+- Created image can be found here [go-app-image:min](https://hub.docker.com/repository/docker/ahmedsoliman202/go-app/general)
 - Side Note: 
-    - in order to use Jenkins to build and push docker images the host pc must have docker installed and in my case I accessed the Jenkins container and installed docker on it and also mounted some docker paths into the Jenkins container
+    - in order to use Jenkins to build and push docker images the host pc must have docker installed and in my case I accessed the Jenkins container and mounted docker socket volume into the Jenkins container to enable the execution of Docker commands on the host machine
 
-## Phase 4 ( deploying the go api app with Kubernetes)
+## Phase 4 ( deploying the go api app with Kubernetes)<a name="Kubernetes"></a>
 
 - Make sure you have `kubectl`,`minikube` installed from the [Kubernetes docs](https://kubernetes.io/docs/tasks/tools/)
 
@@ -125,7 +137,7 @@ The assignment is a simple stateful web app with simple CRUD functionality writt
     - I have set the `replicas` in the `app-deployment.yaml` to `5` to achieve high availability of the service.
     - I have defined a `PersistentVolume` resource in `mysql-pv.yaml` to achieve volume persistence.
 
-## Phase 5 ( deploying the go api app with Helm Charts)
+## Phase 5 ( deploying the go api app with Helm Charts)<a name="helm"></a>
 
 - Make sure to have Helm installed from [official docs](https://helm.sh/docs/intro/install/).
 
@@ -145,8 +157,10 @@ The assignment is a simple stateful web app with simple CRUD functionality writt
     ```bash
     helm install go-app --values=./helm_charts/go-app/values.yaml ./helm_charts/go-app/
     ```
+- Side Note:
+    - I have defined a `HorizontalPodAutoscaler` resource in `hpa.yaml` to achieve autoscaling and high availability of the service. 
 
-## Phase 6 ( building CD of the go api app Using ArgoCD and Helm Charts)
+## Phase 6 ( building CD of the go api app Using ArgoCD and Helm Charts)<a name="argocd"></a>
 
 - First thing to do before installing Argocd is to create a kubernete namespace using this command 
     ```bash
@@ -188,22 +202,40 @@ The assignment is a simple stateful web app with simple CRUD functionality writt
     - If you are using windows, make sure to rename the downloaded argocd cli from `argocd-windows-amd64.exe` to `argocd.exe`
     - Aslo make sure to add `argocd.exe` location to windows environment variable `path`
 
-## Time for some Screen Shots
-
+## Time for some Screen Shots<a name="screen_shots"></a>
+- Running the go app locally and testing health_check GET endpoint
 ![1-local_health_check](screen_shots/1-local_health_check.png)
+- Running the go app locally and testing insert POST endpoint
 ![2-local_insert](screen_shots/2-local_insert.png)
+- Running the go app locally and testing item retrival / GET endpoint
 ![3-local_retrive](screen_shots/3-local_retrive.png)
+- Running the go app locally and testing updating items PATCH endpoint
 ![4-local_patch](screen_shots/4-local_patch.png)
+- Building a Docker image
+![4-docker_build_image.png](screen_shots/4-docker_build_image.png)
+- Starting go-app container and mysql-container through docker-compose
 ![5-docker_compose](screen_shots/5-docker_compose.png)
+- Testing The app while it's running through docker-compose
 ![6-docker_compose](screen_shots/6-docker_compose.png)
+- Running Jenkins stages to build and push the docker image to Dockerhub
 ![7-Jenkins_stage_view](screen_shots/7-Jenkins_stage_view.png)
+- Jenkins successfully built and pushed the docker image to Dockerhub
 ![8-Jenkins_output](screen_shots/8-Jenkins_output.png)
+- Docker image repo on Dockerhub
+![8-docker_image_on_dockerhub](screen_shots/8-docker_image_on_dockerhub.png)
+- Deploying go-app and mysql on kubernetes using minikube cluster
 ![9-minikube_app_deployment](screen_shots/9-minikube_app_deployment.PNG)
+- Deploying go-app and mysql on kubernetes using Cloud cluster
 ![10-cloud_app_deployment](screen_shots/10-cloud_app_deployment.png)
 ![11-cloud_app_deployment](screen_shots/11-cloud_app_deployment.png)
 ![12-cloud_app_deployment](screen_shots/12-cloud_app_deployment.png)
+- Deploying go-app and mysql on kubernetes using Helm charts
 ![13-helm_app_deployment](screen_shots/13-helm_app_deployment.PNG)
+- Deploying go-app and mysql manually on kubernetes using Argocd and Helm charts
 ![14-Argocd_manual_deploy](screen_shots/14-Argocd_manual_deploy.PNG)
+- scaling the go-app by setting replicas to 5
 ![15-Argocd_go_app_with_5_replicas](screen_shots/15-Argocd_go_app_with_5_replicas.PNG)
+- Mysql app on Argocd
 ![16-Argocd_mysql_with_1_replicas](screen_shots/16-Argocd_mysql_with_1_replicas.PNG)
+- Deploying go-app and mysql automaticly on kubernetes using Argocd mainfests
 ![17-Argocd_automatic_deploy](screen_shots/17-Argocd_automatic_deploy.PNG)
